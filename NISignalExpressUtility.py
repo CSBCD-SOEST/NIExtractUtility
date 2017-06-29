@@ -71,7 +71,7 @@ def move_to_output():
     #uniqueid = ["temp", "flow"]
     homeDir = os.path.dirname(os.path.abspath(__file__))
     dataFileDir = os.path.join(homeDir, "CalibratedCSVs")
-    outputFileDir = os.path.join(homeDir, "ADASEED", "CalibratedFlow") #CalibratedTemperature
+    outputFileDir = os.path.join(homeDir, "Output") #CalibratedTemperature
     csvFiles = []
     #list all files in the directory
     #print "datafileDir =" + dataFileDir
@@ -89,9 +89,9 @@ def move_to_output():
         csvFilePath = os.path.join(dataFileDir, csvFile)
        # print "asdjfl" + tempFilePath
         #print flowFilePath
-        with open(csvFilePath, "rb") as inputFile:
+        with open(csvFilePath, "r") as inputFile:
             reader = csv.reader(inputFile)
-            with open(outputFilePath, "wb") as output:
+            with open(outputFilePath, "w") as output:
                 outputwriter = csv.writer(output)
                 for row in reader:
                     if "Temp" in row[3]:
@@ -101,20 +101,18 @@ def move_to_output():
                     elif "Anem" in row[3]:
                         outputwriter.writerow(row)
 
-
-@contextmanager
-def network_share_auth(share, username = None, password = None, drive_letter = 'P'):
-    cmd_parts = ["NET USE %s: %s" % (drive_letter, share)]
-    if password:
-        cmd_parts.append(password)
-    if username:
-        cmd_parts.append("/USER:%s" % username)
-    os.system(" ".join(cmd_parts))
-    try:
-        yield
-    finally:
-        os.system("NET USE %s: /DELETE" % drive_letter)
-
+#@contextmanager
+#def network_share_auth(share, username = None, password = None, drive_letter = 'P'):
+#    cmd_parts = ["NET USE %s: %s" % (drive_letter, share)]
+#    if password:
+#        cmd_parts.append(password)
+#    if username:
+#        cmd_parts.append("/USER:%s" % username)
+#    os.system(" ".join(cmd_parts))
+#    try:
+#        yield
+#    finally:
+#        os.system("NET USE %s: /DELETE" % drive_letter)
 
 #dictionary for tacking on a sensor name & location to a corresponding port
 notes = {'Dev1ai0':"Temperature_1",
@@ -148,7 +146,25 @@ notes = {'Dev1ai0':"Temperature_1",
          'Dev2ai6':"Anem_5",
          'Dev2ai14':"Anem_6",
          'Dev2ai7':"Anem_7",
-         'Dev2ai15':"Anem_8"}
+         'Dev2ai15':"Anem_8",
+         'Dev3ai0':'Anem_1',
+         'Dev3ai1':'Anem_1',
+         'Dev3ai2':'Anem_1',
+         'Dev3ai3':'Anem_1',
+         'Dev3ai4':'Anem_1',
+         'Dev3ai5':'Anem_1',
+         'Dev3ai6':'Anem_1',
+         'Dev3ai7':'Anem_1',
+         'Dev3ai8':'Anem_1',
+         'Dev3ai9':'Anem_1',
+         'Dev3ai10':'Anem_1',
+         'Dev3ai11':'Anem_1',
+         'Dev3ai12':'Anem_1',
+         'Dev3ai13':'Anem_1',
+         'Dev3ai14':'Anem_1',
+         'Dev3ai15':'Anem_1',
+         'Dev3ai16':'Anem_1'
+}
 
 
 
@@ -158,7 +174,7 @@ class GroupChannel:
         This class holds the group and channel names from a metafile.
     """
     def __init__(self, meta_filename):
-        print
+        #print
         self._channel_type = ""
         self._start_time = datetime.datetime.now()
         self._meta_filename = meta_filename
@@ -168,11 +184,11 @@ class GroupChannel:
         # self.__str__()
 
     def __str__(self):
-        print "\nCalling GroupChannels __str__()"
-        print "Type: ", self._channel_type
-        print "Start: ", self._start_time
-        print "Group Name: ", self._group_name
-        print "Channel Names: \n\n", self._channel_names
+        print("\nCalling GroupChannels __str__()")
+        print("Type: ", self._channel_type)
+        print("Start: ", self._start_time)
+        print("Group Name: ", self._group_name)
+        print("Channel Names: \n\n", self._channel_names)
 
     def __get_start_and_names(self, meta_filename, temp_names):
         """
@@ -183,9 +199,9 @@ class GroupChannel:
         meta_file = open(meta_filename)
         for line in meta_file:
             if line[0] == " ":
-	           temp_names.append(line)
+                temp_names.append(line)
             if "Log start time" in line:
-	          self._start_time = self.__start_convert_to_datetime_object(line)
+                self._start_time = self.__start_convert_to_datetime_object(line)
         meta_file.close()
 
     def __start_convert_to_datetime_object(self, line):
@@ -333,15 +349,14 @@ class NISignalExpressUtility:
         channel_names = []
         channel_names = temp_channel_names
 
-
+        #TODO: confirm this change
         converted_file = open(os.path.join(self._csv_location,\
-            self._tdms_to_csv_filename),"wb")
+            self._tdms_to_csv_filename),"w")
         writer = csv.writer(converted_file)
 
         new_row = list(channel_names)
         new_row.insert(0, "timestamp")
         writer.writerow(new_row)
-
         #iterates through each time element
         for times_index in range(len(times)):
             #created delta object
@@ -381,10 +396,10 @@ class NISignalExpressUtility:
             reader = csv.reader(input_file)
 
             reshaped_file = (open(os.path.join(self._reshaped_location,\
-                self._reshaped_filename), "wb"))
+                self._reshaped_filename), "w"))
             writer = csv.writer(reshaped_file)
 
-            reader.next()
+            next(reader)
             new_row = ["datetime", "position", "value"]
             writer.writerow(new_row)
 
@@ -392,14 +407,15 @@ class NISignalExpressUtility:
             for channel_names_index in range(len(channel_names)):
                 for names in channel_names[channel_names_index]:
                     temp_channel_names.append(names)
+
             channel_names = []
             channel_names = temp_channel_names
             new_channel_names = []
             for name in channel_names:
                 name = name.split("_")
-                name = name[1] + name[2]
+                name = name[0] + name[1]
                 new_channel_names.append(name)
-
+             
             for row in reader:
                 current_time = row[0]
                 row = row[1:]
@@ -427,70 +443,67 @@ class NISignalExpressUtility:
                 self._tdms_filenames, self._meta_voltage_filename,\
                 self._channel_names, self._GroupChannels)
         except:
-            print "Note: No Voltage Files"
+            print("Note: No Voltage Files")
             files_found_voltage = False
         try:
             self.__check_for_group_channels(self._tdms_current_filename,\
                 self._tdms_filenames, self._meta_current_filename,\
                 self._channel_names, self._GroupChannels)
         except:
-            print "Note: No Current Files"
+            print("Note: No Current Files")
             files_found_current = False
 
         if files_found_current == True or files_found_voltage == True:
             self.__tdms_to_csv_file(self._channel_names, self._tdms_filenames,\
                 self._GroupChannels)
             self._converted_to_csv =  True
-
-    def add_calibration(self, sensor_id, premultiplier,
-                        preoffset, multiplier, offset):
-        """
-            This function adds a calibration to NICalibrate.csv.
-        """
+   
+#   def add_calibration(self, sensor_id, premultiplier,
+#                        preoffset, multiplier, offset):
+        #  This function adds a calibration to NICalibrate.csv.
         # Open the calibration file
         # Check if the sensor_id is in the calibration file
         # Delete the calibration for the sensor_id
         # if it is in the calibration file
         # Append the new calibration to the calibration file
-        calibration_filename = "NICalibrate.csv"
-        delete_id = False
-        sensor = str(sensor_id)
-        with open(calibration_filename, "r") as calibration_file:
-            for row in csv.reader(calibration_file):
-                if sensor in row:
-                    delete_id = True
+        #calibration_filename = "NICalibrate.csv"
+        #delete_id = False
+        #sensor = str(sensor_id)
+        #with open(calibration_filename, "r") as calibration_file:
+        #    for row in csv.reader(calibration_file):
+        #        if sensor in row:
+        #            delete_id = True
 
-        if delete_id == True:
-            self.delete_calibration(sensor_id)
+        #if delete_id == True:
+        #    self.delete_calibration(sensor_id)
 
-        with open(calibration_filename, "a") as calibration_file:
-            row = (str(sensor_id) + "," +\
-                   str(premultiplier) + "," +\
-                   str(preoffset) + "," +\
-                   str(multiplier) + "," +\
-                   str(offset) + "\n")
-            calibration_file.write(row)
-
-
-    def delete_calibration(self, sensor_id):
-        """
-            This function deletes a calibration from NICalibrate.csv.
-        """
+        #with open(calibration_filename, "a") as calibration_file:
+        #    row = (str(sensor_id) + "," +\
+        #           str(premultiplier) + "," +\
+        #           str(preoffset) + "," +\
+        #           str(multiplier) + "," +\
+        #           str(offset) + "\n")
+        #    calibration_file.write(row)
+ 
+#    def delete_calibration(self, sensor_id):
+#        """
+#            This function deletes a calibration from NICalibrate.csv.
+#        """
         # Copy NICalibrate.csv into a temp.csv
         # skipping the sensor_id to be deleted
         # Delete the old calibration file NICalibrate.csv
         # Rename temp.csv into the new calibration file NICalibrate.csv
-        calibration_filename = "NISignalExpressCalibrate.csv"
-        temp_filename = "temp.csv"
-        sensor = str(sensor_id)
-        with open(temp_filename, "wb") as temp_file:
-            with open(calibration_filename, "r") as calibration_file:
-                for row in csv.reader(calibration_file):
-                    if sensor not in row:
-                        csv.writer(temp_file).writerow(row)
+#        calibration_filename = "NISignalExpressCalibrate.csv"
+#        temp_filename = "temp.csv"
+#        sensor = str(sensor_id)
+#        with open(temp_filename, "wb") as temp_file:
+#            with open(calibration_filename, "r") as calibration_file:
+#                for row in csv.reader(calibration_file):
+#                    if sensor not in row:
+#                        csv.writer(temp_file).writerow(row)
 
-        os.remove(calibration_filename)
-        os.rename(temp_filename, calibration_filename)
+#        os.remove(calibration_filename)
+#        os.rename(temp_filename, calibration_filename)
 
 
     def __calibrate_value(self, sensor_id, value):
@@ -511,15 +524,13 @@ class NISignalExpressUtility:
         preoffset = 0.0
         multiplier = 1.0
         offset = 0.0
-
-        row = reader.next()
+        row = next(reader)
         for row in reader:
             if row[0] == str(sensor_id):
                 premultiplier = float(row[1])
                 preoffset = float(row[2])
                 multiplier = float(row[3])
                 offset = float(row[4])
-
         value = multiplier * ((premultiplier * value) + preoffset) + offset
 
         calibration_file.close()
@@ -555,16 +566,19 @@ class NISignalExpressUtility:
         output_filename = str(self._reshaped_filename).replace(".csv",\
             "_calibrated.csv")
         output_file = (open(os.path.join(self._calibrated_location,\
-            output_filename), "wb"))
+            output_filename), "w"))
         writer = csv.writer(output_file)
-        new_row = reader.next()
+        new_row = next(reader)
         new_row.append('comments')
         writer.writerow(new_row)
 
         for row in reader:
-        	value = self.__calibrate_value(row[1], row[2])
-        	new_row = [row[0], row[1], round(value,5), notes[row[1]]]
-        	writer.writerow(new_row)
+            value = self.__calibrate_value(row[1], row[2])
+            try:
+                new_row = [row[0], row[1], round(value,5), notes[row[1]]]
+            except:
+                print("Update the notes dictionary located in this file. Entries present in TDMS file do not correnspond to a channel-value pairing.") 
+            writer.writerow(new_row)
 
         input_file.close()
         output_file.close()
