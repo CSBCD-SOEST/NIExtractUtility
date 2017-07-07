@@ -573,10 +573,12 @@ class NISignalExpressUtility:
         writer.writerow(new_row)
 
         for row in reader:
-            value = self.__calibrate_value(row[1], row[2])
+            #value = self.__calibrate_value(row[1], row[2])
+            value = float(row[2])
             try:
-                new_row = [row[0], row[1], round(value,5), notes[row[1]]]
-            except:
+                 #May change this if you have a sensor that you want more digits of precision on
+                 new_row = [row[0], row[1], round(value,5), notes[row[1]]]
+            except Exception as e:
                 print("Update the notes dictionary located in this file. Entries present in TDMS file do not correnspond to a channel-value pairing.") 
             writer.writerow(new_row)
 
